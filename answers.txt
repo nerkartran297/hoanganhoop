@@ -1,185 +1,86 @@
 LAB 04 - CLASS DESIGN AND ENCAPSULATION - ANSWERS
 ==================================================
 
-----------------------------------------------------------------------
 Section 5 - Create Constructor Methods
-----------------------------------------------------------------------
-Question: Suppose you write one constructor that builds a DVD from its
-title, and then another that builds a DVD from its category. Does Java
-allow this? Why?
 
-Answer: No, Java does not allow it.
+Question: Suppose you write one constructor that builds a DVD from its title, and then another that builds a DVD from its category. Does Java allow this? Why?
 
-Both constructors would be:
-    public DigitalVideoDisc(String title)    { ... }
-    public DigitalVideoDisc(String category) { ... }
+Answer:
 
-Overloaded methods/constructors must have different signatures. A
-signature is made of the name and the list of parameter TYPES (their
-number, types and order) - the parameter NAMES are not part of it.
-Both constructors above have the same signature DigitalVideoDisc(String),
-so the compiler reports an error ("Duplicate method DigitalVideoDisc(String)"
-/ "constructor DigitalVideoDisc(String) is already defined"). Even if it
-were allowed, a call like new DigitalVideoDisc("Animation") would be
-ambiguous: the compiler could not know which one to choose.
+No, because both constructors take a String parameter.
 
-To build a DVD from its category we must use a different signature, e.g.
-a static factory method (createByCategory(String category)), or a
-constructor with a different parameter list.
+    DigitalVideoDisc(String title)
+    DigitalVideoDisc(String category)
+
+Java checks parameter types, not parameter names. So these two constructors have the same signature and cause a compile error.
 
 
-----------------------------------------------------------------------
 Section 9.1 - Overloading by differing the type of the parameter
-----------------------------------------------------------------------
-Question: Compare the varargs version with the array version. Which one
-do you prefer in this case, and why?
 
-    public void addDigitalVideoDisc(DigitalVideoDisc[] dvdList)
-    public void addDigitalVideoDisc(DigitalVideoDisc... dvdList)
+Question: Compare the varargs version with the array version. Which one do you prefer in this case, and why?
 
-Comparison:
-- Inside the method both are the same: a varargs parameter is just an
-  array (dvdList.length, dvdList[i], for-each ...). The compiler turns
-  "DigitalVideoDisc..." into "DigitalVideoDisc[]".
-- Because of that, both methods have the same signature after
-  compilation, so they CANNOT be declared together in the same class
-  (compile error: duplicate method). We have to choose one of them.
-- Call site:
-    * Array version: the caller must build an array first:
-          cart.addDigitalVideoDisc(new DigitalVideoDisc[] {dvd1, dvd2, dvd3});
-    * Varargs version: accepts an array AND any number of separate
-      arguments:
-          cart.addDigitalVideoDisc(dvdList);            // an array
-          cart.addDigitalVideoDisc(dvd1, dvd2, dvd3);   // a list of DVDs
-- Limitations of varargs: only one varargs parameter per method, it must
-  be the last parameter, and it can make overload resolution less obvious
-  (here a call with 1 or 2 DVDs picks the more specific methods
-  addDigitalVideoDisc(DigitalVideoDisc) / addDigitalVideoDisc(dvd1, dvd2),
-  calls with 0 or 3+ DVDs use varargs). An empty call
-  cart.addDigitalVideoDisc() is also legal and simply adds nothing.
+Answer:
 
-Preference: the VARARGS version. It does everything the array version
-does (an existing array can still be passed directly), and in addition
-the client code is shorter and more readable when adding several DVDs at
-once, without creating a temporary array. That is why the Cart class
-keeps only the varargs version.
+Both work almost the same because varargs is treated as an array inside the method.
+
+The difference is how we call them.
+
+Array version:
+    cart.addDigitalVideoDisc(new DigitalVideoDisc[]{dvd1, dvd2});
+
+Varargs version:
+    cart.addDigitalVideoDisc(dvd1, dvd2);
+
+I prefer varargs because it's shorter and easier to use. It can also accept an array, so there's no need to use the array version.
+
+We can't declare both methods in the same class because Java treats them as having the same signature.
 
 
-----------------------------------------------------------------------
 Section 10 - Passing Arguments to Methods
-----------------------------------------------------------------------
-Question: Is Java a pass by value or a pass by reference programming
-language?
 
-Answer: Java is ALWAYS pass by value.
-- For primitive types (int, float, ...) the value itself is copied.
-- For objects, the variable does not hold the object but a REFERENCE
-  (the address of the object). When we call a method, this reference is
-  copied into the parameter. So the parameter and the argument are two
-  different variables that point to the same object. Java passes
-  "references by value", it never passes an alias of the variable.
+Question: Is Java a pass by value or a pass by reference programming language?
 
-Output of TestPassingParameter:
-    jungle dvd title: Jungle
-    cinderella dvd title: Cinderella
-    jungle dvd title: Cinderella
+Answer:
 
-a) After the call swap(jungleDVD, cinderellaDVD), why do the titles of
-   these two objects stay the same?
+Java is always pass by value.
 
-   When swap is called, o1 receives a COPY of the reference stored in
-   jungleDVD and o2 receives a COPY of the reference stored in
-   cinderellaDVD. Inside swap we only exchange the two local copies:
-   o1 now points to the Cinderella object and o2 to the Jungle object.
-   The variables jungleDVD and cinderellaDVD in main() are not touched,
-   and neither object is modified. When swap returns, o1, o2 and tmp
-   are destroyed, so nothing changes for the caller: jungleDVD still
-   refers to "Jungle" and cinderellaDVD still refers to "Cinderella".
-   If Java were pass by reference, o1/o2 would be aliases of the
-   variables in main() and the swap would work.
+For primitive types, Java copies the value. For objects, Java copies the reference to the object.
 
-b) After the call changeTitle(jungleDVD, cinderellaDVD.getTitle()), why
-   is the title of jungleDVD changed?
+a) After calling swap(), why do the titles stay the same?
 
-   The parameter dvd receives a copy of the reference in jungleDVD, so
-   dvd and jungleDVD point to the SAME object in memory.
-   - dvd.setTitle(title) works on that shared object through the copied
-     reference, so the object's title really becomes "Cinderella", and
-     the change is visible through jungleDVD in main().
-   - dvd = new DigitalVideoDisc(oldTitle) only makes the LOCAL copy dvd
-     point to a new object with the title "Jungle". jungleDVD in main()
-     still points to the original object, so this line has no effect for
-     the caller (the new object is lost when the method returns).
-   Therefore jungleDVD's title is "Cinderella". This does not mean Java
-   is pass by reference: we can modify the object that a copied
-   reference points to, but we can never make the caller's variable
-   point to another object - which proves Java is pass by value.
+Because swap() only swaps the local reference variables inside the method. It doesn't change the original references in main(), so the two DVDs stay the same.
+
+b) After calling changeTitle(), why is the title of jungleDVD changed?
+
+Because the copied reference still points to the same DVD object.
+
+So when setTitle() is called, it changes the actual object's title.
+
+Creating a new DVD and assigning it to the local parameter doesn't change the original reference in main().
 
 
-----------------------------------------------------------------------
 Extra exercise - When static?
-----------------------------------------------------------------------
-People say "static kills OOP" because a static member belongs to the
-class, not to any object. OOP is about objects that keep their own data
-and behaviour, and static goes around that idea:
-- A static variable is like a global variable. Any code can change it,
-  so a bug in one place can affect every object.
-- Static methods cannot be overridden, so we lose polymorphism.
-- Code that calls static methods directly is hard to test, because we
-  cannot replace them with a fake version.
-- If we write everything as static, we end up with procedural code
-  (like C) inside Java classes.
 
-But static is still the right choice when something belongs to the
-whole concept (the class), not to one particular object. These are the
-cases I think are acceptable:
+Question: People say "static kills OOP". When should we use static?
 
-1. Constants shared by all objects
-   Every cart has the same maximum size, so there is no reason for each
-   cart to store its own copy.
-       public static final int MAX_NUMBERS_ORDERED = 20;   // Cart
-       Math.PI, Integer.MAX_VALUE
+Answer:
 
-2. Data that must be shared between all instances (e.g. a counter)
-   In AIMS each DVD needs a unique id, so the class has to remember how
-   many DVDs have been created. One DVD alone cannot know this, so
-   nbDigitalVideoDiscs must be static, while id stays an instance
-   variable.
-       private static int nbDigitalVideoDiscs = 0;
-       private int id;
-       // in each constructor:
-       nbDigitalVideoDiscs++;
-       this.id = nbDigitalVideoDiscs;
+Static belongs to the class instead of an object. Using too much static can make code less object-oriented, but it's still useful in some cases.
 
-3. Utility methods that do not use any object state
-   They only work on their parameters, so creating an object just to
-   call them would be pointless.
-       Math.max(a, b), Math.sqrt(x), Arrays.sort(arr), Integer.parseInt("42")
+1. Constants: Values shared by all objects.
+   Example: public static final int MAX_NUMBERS_ORDERED = 20;
 
-4. The entry point of the program
-   When the program starts there is no object yet, so main has to be
-   static.
-       public static void main(String[] args)
+2. Shared variables: For example, counting how many DVDs have been created.
+   Example: private static int nbDigitalVideoDiscs = 0;
 
-5. Factory methods (methods with a name that create objects)
-   They are useful when two constructors would have the same signature.
-   For example, a DVD cannot have both DigitalVideoDisc(String title)
-   and DigitalVideoDisc(String category), but a static method fixes it:
-       public static DigitalVideoDisc createByCategory(String category) { ... }
-   Other examples: LocalDate.of(2026, 10, 18), List.of(1, 2, 3),
-   Integer.valueOf(5)
+3. Utility methods: Methods that don't need object data, like Math.sqrt() or Math.max().
 
-6. Getting the one shared instance of a class (Singleton)
-   For example one shared configuration or one database connection
-   pool:
-       Config.getInstance()
+4. Main method: Java uses public static void main(String[] args) to start the program.
 
-Conclusion
-----------
-Before making something static, I ask: "Does this belong to one object,
-or to the class as a whole?" If it belongs to one object, like a DVD's
-title or a cart's list of items, it must be an instance member. Static
-is only for things that are truly common to all objects or that need no
-object at all. I should be careful with static variables that can change
-(case 2), because every object shares them. Static constants
-(static final) are almost always safe.
+5. Factory methods: Static methods can be used to create objects, like Integer.valueOf().
+
+6. Singleton: Used when we only need one shared instance, like Config.getInstance().
+
+Conclusion:
+
+I think static should be used when something belongs to the whole class or doesn't need an object. Otherwise, normal instance variables and methods are better.
